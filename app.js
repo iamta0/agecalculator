@@ -1,131 +1,91 @@
+// Validate input function
+const validateInput = (input, validator) => {
+    // Check if the input is empty
+    if (input.value === "") {
+        input.parentElement.classList.remove("invalid-value");
+        input.parentElement.classList.add("empty-value");
+        return false;
+    // Check if the input is invalid based on the validator function
+    } else if (!validator(input.value)) {
+        input.parentElement.classList.add("invalid-value");
+        input.parentElement.classList.remove("empty-value");
+        return false;
+    // If input is valid
+    } else {
+        input.parentElement.classList.remove("invalid-value");
+        input.parentElement.classList.remove("empty-value");
+        return true;
+    }
+};
 
-        // Validate input
-        const validateInput = (input, validator) => {
-            if (input.value === "") {
-                input.parentElement.classList.remove("invalid-value");
-                input.parentElement.classList.add("empty-value");
-                return false;
-            } else if (!validator(input.value)) {
-                input.parentElement.classList.add("invalid-value");
-                input.parentElement.classList.remove("empty-value");
-                return false;
-            } else {
-                input.parentElement.classList.remove("invalid-value");
-                input.parentElement.classList.remove("empty-value");
-                return true;
-            }
-        };
+// Check if the day is valid for the given month and year
+const isDayValid = (day, month, year) => {
+    // Determine if the year is a leap year
+    const leapYear = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+    // Array holding the maximum days for each month
+    const maxDays = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    // Check if day is an integer and within the valid range for the given month
+    return Number.isInteger(day) && day >= 1 && day <= maxDays[month - 1];
+};
 
-        // Check if the values are valid
-        const isDayValid = (day, month, year) => {
-            const leapYear = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
-            const maxDays = [
-                31,
-                leapYear ? 29 : 28,
-                31,
-                30,
-                31,
-                30,
-                31,
-                31,
-                30,
-                31,
-                30,
-                31,
-            ];
-            return Number.isInteger(day) && day >= 1 && day <= maxDays[month - 1];
-        };
+// Check if the month is valid (1-12)
+const isMonthValid = (month) => Number.isInteger(month) && month >= 1 && month <= 12;
 
-        const isMonthValid = (month) => {
-            return Number.isInteger(month) && month >= 1 && month <= 12;
-        };
+// Check if the year is valid (greater than 1970 and less than or equal to the current year)
+const isYearValid = (year) => {
+    const invalidYearMsg = document.querySelector(".invalid-year");
+    // Update message for invalid year
+    invalidYearMsg.textContent = year <= 1970 ? "Year must be greater than 1970" : "Must be in the past";
+    const currentYear = new Date().getFullYear();
+    // Check if year is an integer and within the valid range
+    return Number.isInteger(year) && year >= 1971 && year <= currentYear;
+};
 
-        const isYearValid = (year) => {
-            const invalidYearMsg = document.querySelector(".invalid-year");
-            if (year <= 1970) {
-                invalidYearMsg.textContent = "Year must be greater than 1970";
-            } else {
-                invalidYearMsg.textContent = "Must be in the past";
-            }
+// Handle form submission
+document.querySelector("form").addEventListener("submit", (e) => {
+    e.preventDefault(); // Prevent default form submission
 
-            const currentYear = new Date().getFullYear();
-            return Number.isInteger(year) && year >= 1971 && year <= currentYear;
-        };
+    const dayInput = document.querySelector(".input__day");
+    const monthInput = document.querySelector(".input__month");
+    const yearInput = document.querySelector(".input__year");
 
-        // Handle form submission
-        const form = document.querySelector("form");
-        form.addEventListener("submit", (e) => {
-            e.preventDefault();
+    // Validate day input
+    const isDayInputValid = validateInput(dayInput, (value) =>
+        isDayValid(Number(value), Number(monthInput.value), Number(yearInput.value))
+    );
+    // Validate month input
+    const isMonthInputValid = validateInput(monthInput, (value) => isMonthValid(Number(value)));
+    // Validate year input
+    const isYearInputValid = validateInput(yearInput, (value) => isYearValid(Number(value)));
 
-            const dayInput = document.querySelector(".input__day");
-            const monthInput = document.querySelector(".input__month");
-            const yearInput = document.querySelector(".input__year");
+    // If all inputs are valid, calculate and display the age
+    if (isDayInputValid && isMonthInputValid && isYearInputValid) {
+        const inputDate = new Date(Number(yearInput.value), Number(monthInput.value) - 1, Number(dayInput.value));
+        const timeDiff = new Date() - inputDate; // Calculate time difference
+        const ageDate = new Date(timeDiff); // Convert time difference to date
+        const ageYear = ageDate.getUTCFullYear() - 1970; // Calculate years
+        const ageMonth = ageDate.getUTCMonth(); // Calculate months
+        const ageDay = ageDate.getUTCDate() - 1; // Calculate days
 
-            const isDayInputValid = validateInput(dayInput, (value) =>
-                isDayValid(
-                    Number(value),
-                    Number(monthInput.value),
-                    Number(yearInput.value)
-                )
-            );
-            const isMonthInputValid = validateInput(monthInput, (value) =>
-                isMonthValid(Number(value))
-            );
-            const isYearInputValid = validateInput(yearInput, (value) =>
-                isYearValid(Number(value))
-            );
+        // Update age display with animation
+        animateCounter(document.querySelector(".age__day"), ageDay);
+        animateCounter(document.querySelector(".age__month"), ageMonth);
+        animateCounter(document.querySelector(".age__year"), ageYear);
+    }
+});
 
-            if (isDayInputValid && isMonthInputValid && isYearInputValid) {
-                // Calculate the age
-                const inputDate = new Date(
-                    Number(yearInput.value),
-                    Number(monthInput.value) - 1,
-                    Number(dayInput.value)
-                );
-                const timeDiff = new Date() - inputDate;
-                const ageDate = new Date(timeDiff);
-                const ageYear = ageDate.getUTCFullYear() - 1970;
-                const ageMonth = ageDate.getUTCMonth();
-                const ageDay = ageDate.getUTCDate() - 1;
-
-                // Update the age display with animation
-                const dayElement = document.querySelector(".age__day");
-                const monthElement = document.querySelector(".age__month");
-                const yearElement = document.querySelector(".age__year");
-
-                animateCounter(dayElement, ageDay);
-                animateCounter(monthElement, ageMonth);
-                animateCounter(yearElement, ageYear);
-            }
-        });
-
-        // Animate the counter
-        function animateCounter(element, targetValue) {
-            const duration = 5000; // Total duration of animation in milliseconds
-            const interval = 50; // Interval between updates in milliseconds
-            const increment = Math.ceil(targetValue / (duration / interval));
-            let currentValue = 0;
-            let intervalId;
-
-            function updateValue() {
-                element.textContent = currentValue;
-
-                if (currentValue >= targetValue) {
-                    clearInterval(intervalId);
-                } else {
-                    currentValue += increment;
-                }
-            }
-
-            intervalId = setInterval(updateValue, interval);
-        }
-
-
-
-
-
-
-
+// Animate the counter to update the age display smoothly
+function animateCounter(element, targetValue) {
+    const duration = 5000; // Total duration of animation in milliseconds
+    const interval = 50; // Interval between updates in milliseconds
+    const increment = Math.ceil(targetValue / (duration / interval)); // Calculate increment value
+    let currentValue = 0; // Initialize current value
+    let intervalId = setInterval(() => {
+        element.textContent = currentValue; // Update element text content
+        if (currentValue >= targetValue) clearInterval(intervalId); // Clear interval if target is reached
+        else currentValue += increment; // Increment current value
+    }, interval); // Set interval for updates
+}
 // function print() {
 //             let year = document.getElementById('year').value;
 //             let d = new Date()
